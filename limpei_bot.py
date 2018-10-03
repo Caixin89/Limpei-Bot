@@ -51,7 +51,7 @@ def load_jokes():
       with open("weights.csv", "r") as csvfile:
          weights = np.array([float(x) for x in csvfile.readlines()])
    else:
-      weights = np.array([1.0] * len(questions))
+      weights = np.array([10.0] * len(questions))
 
 def thread_save_weights(interval):
    while True:
