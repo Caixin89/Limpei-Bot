@@ -102,7 +102,7 @@ def button(bot, update):
       reply_markup = InlineKeyboardMarkup(keyboard)
       bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
    elif query.data == "downvote" and selected_joke is not None:
-      weights[selected_joke] = max(weights[selected_joke] - 1, 1)
+      weights[selected_joke] = max(weights[selected_joke] - 1, 0)
       keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="ans")]]
       text = "Qn: " + questions[selected_joke] + "\nAns: " + answers[selected_joke]
       reply_markup = InlineKeyboardMarkup(keyboard)
