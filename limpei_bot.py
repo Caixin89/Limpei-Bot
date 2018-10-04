@@ -28,7 +28,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-selected_joke = None
 
 def get_api_key():
   with open("api_key.txt", "r") as file:
@@ -79,41 +78,47 @@ def help(bot, update):
 
 def joke(bot, update):
    """Tells the joke"""
-   global selected_joke
    selected_joke = np.random.choice(len(questions), p=weights / np.sum(weights))
-   keyboard = [[InlineKeyboardButton("Tell me!", callback_data="qn")]]
+   keyboard = [[InlineKeyboardButton("Tell me!", callback_data="q"+str(selected_joke))]]
    reply_markup = InlineKeyboardMarkup(keyboard)
    update.message.reply_text("Qn: " + questions[selected_joke], reply_markup=reply_markup)
 
-def button(bot, update):
-   """Handles button logic: Either tells the question or answer part of a joke"""
-   global selected_joke
+def QnsButton(bot, update):
    query = update.callback_query
-   if query.data == "qn" and selected_joke is not None:
-      keyboard = [[InlineKeyboardButton("Hahaha, funny", callback_data="upvote"), InlineKeyboardButton("Meh", callback_data="downvote")],
-      [InlineKeyboardButton("Next joke pls!", callback_data="ans")]]
-      text = "Qn: " + questions[selected_joke] + "\nAns: " + answers[selected_joke]
-      reply_markup = InlineKeyboardMarkup(keyboard)
-      bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
-   elif query.data == "upvote" and selected_joke is not None:
-      weights[selected_joke] = weights[selected_joke] + 1
-      keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="ans")]]
-      text = "Qn: " + questions[selected_joke] + "\nAns: " + answers[selected_joke]
-      reply_markup = InlineKeyboardMarkup(keyboard)
-      bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
-   elif query.data == "downvote" and selected_joke is not None:
-      weights[selected_joke] = max(weights[selected_joke] - 1, 1)
-      keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="ans")]]
-      text = "Qn: " + questions[selected_joke] + "\nAns: " + answers[selected_joke]
-      reply_markup = InlineKeyboardMarkup(keyboard)
-      bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
-   elif query.data == "ans":
-      selected_joke = np.random.choice(len(questions), p=weights / np.sum(weights))
-      keyboard = [[InlineKeyboardButton("Tell me!", callback_data="qn")]]
-      text = "Qn: " + questions[selected_joke]
-      reply_markup = InlineKeyboardMarkup(keyboard)
-      bot.edit_message_reply_markup(chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=None)
-      update.effective_chat.send_message(text, reply_markup=reply_markup)
+   selected_joke = int(query.data[1:])
+   keyboard = [[InlineKeyboardButton("Hahaha, funny", callback_data="u"+str(selected_joke)), 
+   InlineKeyboardButton("Meh", callback_data="d"+str(selected_joke))],
+   [InlineKeyboardButton("Next joke pls!", callback_data="a")]]
+   text = "Qn: " + questions[selected_joke] + "\nAns: " + answers[selected_joke]
+   reply_markup = InlineKeyboardMarkup(keyboard)
+   bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
+
+def UpvoteButton(bot, update):
+   query = update.callback_query
+   selected_joke = int(query.data[1:])
+   weights[selected_joke] = weights[selected_joke] + 1
+   keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="a")]]
+   text = "Qn: " + questions[selected_joke] + "\nAns: " + answers[selected_joke]
+   reply_markup = InlineKeyboardMarkup(keyboard)
+   bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
+
+def DownvoteButton(bot, update):
+   query = update.callback_query
+   selected_joke = int(query.data[1:])
+   weights[selected_joke] = max(weights[selected_joke] - 1, 1)
+   keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="a")]]
+   text = "Qn: " + questions[selected_joke] + "\nAns: " + answers[selected_joke]
+   reply_markup = InlineKeyboardMarkup(keyboard)
+   bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
+
+def AnsButton(bot, update):
+   query = update.callback_query
+   selected_joke = np.random.choice(len(questions), p=weights / np.sum(weights)) 
+   keyboard = [[InlineKeyboardButton("Tell me!", callback_data="q"+str(selected_joke))]]
+   text = "Qn: " + questions[selected_joke]
+   reply_markup = InlineKeyboardMarkup(keyboard)
+   bot.edit_message_reply_markup(chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=None)
+   update.effective_chat.send_message(text, reply_markup=reply_markup)
 
 def dont_understand(bot, update):
     """Echo the user message."""
@@ -141,7 +146,10 @@ def main():
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(button))
+    dp.add_handler(CallbackQueryHandler(QnsButton, pattern="q[0-9]+"))
+    dp.add_handler(CallbackQueryHandler(UpvoteButton, pattern="u[0-9]+"))
+    dp.add_handler(CallbackQueryHandler(DownvoteButton, pattern="d[0-9]+"))
+    dp.add_handler(CallbackQueryHandler(AnsButton))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("joke", joke))
     dp.add_handler(MessageHandler(Filters.text, dont_understand))
