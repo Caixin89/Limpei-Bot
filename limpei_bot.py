@@ -83,7 +83,7 @@ def joke(bot, update):
    reply_markup = InlineKeyboardMarkup(keyboard)
    update.message.reply_text("Qn: " + questions[selected_joke], reply_markup=reply_markup)
 
-def QnsButton(bot, update):
+def AnsButton(bot, update):
    query = update.callback_query
    selected_joke = int(query.data[1:])
    keyboard = [[InlineKeyboardButton("Hahaha, funny", callback_data="u"+str(selected_joke)), 
@@ -111,7 +111,7 @@ def DownvoteButton(bot, update):
    reply_markup = InlineKeyboardMarkup(keyboard)
    bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
 
-def AnsButton(bot, update):
+def QnButton(bot, update):
    query = update.callback_query
    selected_joke = np.random.choice(len(questions), p=weights / np.sum(weights)) 
    keyboard = [[InlineKeyboardButton("Tell me!", callback_data="q"+str(selected_joke))]]
@@ -146,10 +146,10 @@ def main():
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(QnsButton, pattern="q[0-9]+"))
+    dp.add_handler(CallbackQueryHandler(AnsButton, pattern="q[0-9]+"))
     dp.add_handler(CallbackQueryHandler(UpvoteButton, pattern="u[0-9]+"))
     dp.add_handler(CallbackQueryHandler(DownvoteButton, pattern="d[0-9]+"))
-    dp.add_handler(CallbackQueryHandler(AnsButton))
+    dp.add_handler(CallbackQueryHandler(QnButton))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("joke", joke))
     dp.add_handler(MessageHandler(Filters.text, dont_understand))
