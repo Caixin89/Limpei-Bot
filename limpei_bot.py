@@ -125,7 +125,7 @@ def QnButton(bot, update):
    update.effective_chat.send_message(text, reply_markup=reply_markup)
 
 def dont_understand_msg(bot, update):
-    """Echo the user message."""
+    """Handle invalid user message"""
     update.message.reply_text("Sorry, I don't understand what you just said.\nEnter /joke to hear a joke.")
 
 def error(bot, update, error):
@@ -133,7 +133,7 @@ def error(bot, update, error):
     logger.warning('Update "%s" caused error "%s"', update, error)
 
 def dont_understand_cmd(bot, update):
-    """Echo the user message."""
+    """Handle invalid user command"""
     invalid_cmd = update.message.text.split()[0]
     update.message.reply_text("Sorry, " + invalid_cmd + " is an invalid command.\nEnter /joke to hear a joke.")
 
