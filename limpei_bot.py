@@ -77,13 +77,14 @@ def help(bot, update):
     update.message.reply_text('Type /joke to hear a question and answer joke')
 
 def joke(bot, update):
-   """Tells the joke"""
+   """Provide a new joke by first displaying the question part and a button to display the answer"""
    selected_joke = np.random.choice(len(questions), p=weights / np.sum(weights))
    keyboard = [[InlineKeyboardButton("Tell me!", callback_data="q"+str(selected_joke))]]
    reply_markup = InlineKeyboardMarkup(keyboard)
    update.message.reply_text("Qn: " + questions[selected_joke], reply_markup=reply_markup)
 
 def AnsButton(bot, update):
+   """Show the answer part of joke and display 'Hahaha, funny', 'Meh' and 'Next joke pls!' buttons"""
    query = update.callback_query
    selected_joke = int(query.data[1:])
    keyboard = [[InlineKeyboardButton("Hahaha, funny", callback_data="u"+str(selected_joke)), 
@@ -94,6 +95,7 @@ def AnsButton(bot, update):
    bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
 
 def UpvoteButton(bot, update):
+   """Handle upvoting logic and clear the 'Hahaha, funny' and 'Meh' buttons"""
    query = update.callback_query
    selected_joke = int(query.data[1:])
    weights[selected_joke] = weights[selected_joke] + 1
@@ -103,6 +105,7 @@ def UpvoteButton(bot, update):
    bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
 
 def DownvoteButton(bot, update):
+   """Handle downvoting logic and clear the 'Hahaha, funny' and 'Meh' buttons"""
    query = update.callback_query
    selected_joke = int(query.data[1:])
    weights[selected_joke] = max(weights[selected_joke] - 1, 1)
@@ -112,6 +115,7 @@ def DownvoteButton(bot, update):
    bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
 
 def QnButton(bot, update):
+   """Provide a new joke by first displaying the question part and a button to display the answer"""
    query = update.callback_query
    selected_joke = np.random.choice(len(questions), p=weights / np.sum(weights)) 
    keyboard = [[InlineKeyboardButton("Tell me!", callback_data="q"+str(selected_joke))]]
@@ -120,13 +124,18 @@ def QnButton(bot, update):
    bot.edit_message_reply_markup(chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=None)
    update.effective_chat.send_message(text, reply_markup=reply_markup)
 
-def dont_understand(bot, update):
+def dont_understand_msg(bot, update):
     """Echo the user message."""
-    update.message.reply_text("Sorry, I dont understand what you just said.\nEnter /joke to hear a joke.")
+    update.message.reply_text("Sorry, I don't understand what you just said.\nEnter /joke to hear a joke.")
 
 def error(bot, update, error):
     """Log Errors caused by Updates."""
     logger.warning('Update "%s" caused error "%s"', update, error)
+
+def dont_understand_cmd(bot, update):
+    """Echo the user message."""
+    invalid_cmd = update.message.text.split()[0]
+    update.message.reply_text("Sorry, " + invalid_cmd + " is an invalid command.\nEnter /joke to hear a joke.")
 
 def main():
     """Start the bot."""
@@ -152,7 +161,8 @@ def main():
     dp.add_handler(CallbackQueryHandler(QnButton))
     dp.add_handler(CommandHandler("help", help))
     dp.add_handler(CommandHandler("joke", joke))
-    dp.add_handler(MessageHandler(Filters.text, dont_understand))
+    dp.add_handler(MessageHandler(Filters.text, dont_understand_msg))
+    dp.add_handler(MessageHandler(Filters.command, dont_understand_cmd))
 
     # log all errors
     dp.add_error_handler(error)
