@@ -76,8 +76,8 @@ def start(bot, update):
     """Send a message when the command /start is issued."""
     user = update.message.from_user
     update.message.reply_text("Hi " +  user.first_name + """.\n
-Feeling down or bored?\n
-Type /joke to hear a question and answer joke!""" )
+    	Feeling down or bored?\n
+    	Type /joke to hear a question and answer joke!""" )
 
 def help(bot, update):
     """Send a message when the command /help is issued."""
