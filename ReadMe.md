@@ -6,9 +6,10 @@ and jokes dataset from https://www.kaggle.com/jiriroz/qa-jokes.
 
 Instructions:
 Just run `python limpei_bot.py` on the server.
+Enter `python limpei_bot.py --reset` to start the bot with the learnt weight of each joke reset.
 To terminate the process, enter Ctrl+C.
 
 Interacting with the bot:
 1. Enter /joke to start
 2. The question part of the joke will be displayed with a button for user to press to see the answer part.
-3. After clicking the answer part of the joke, the answer will appear and a button to display the next joke will also appear.
+3. After clicking the answer part of the joke, the answer will appear and a button to display the next joke will also appear. There are also buttons to upvote("Haha, funny") or downvote("Meh") a joke.

@@ -21,7 +21,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 import logging, os, csv, threading, time
 import numpy as np
-
+import argparse
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -34,28 +34,35 @@ def get_api_key():
     api = file.read().strip()
   return api
 
-def load_jokes():
+def load_jokes(default_weight=10.0):
    global questions
    questions = []
    global answers 
-   answers = []   
+   answers = []  
+   global weights   
+   weights = [] 
    file_path = "jokes.csv"
    with open(file_path, 'r') as csvfile:
       #Skip header row
       for x in list(csv.reader(csvfile))[1:]:
-         questions.append(x[1])
-         answers.append(x[2])
-   global weights
-   if os.path.isfile("weights.csv"):
-      with open("weights.csv", "r") as csvfile:
-         weights = np.array([float(x) for x in csvfile.readlines()])
-   else:
-      weights = np.array([10.0] * len(questions))
+         try:
+            weight = float(x[2])
+         except (ValueError, IndexError) as e:
+            weight = default_weight
+         weights.append(weight)        
+         questions.append(x[0])
+         answers.append(x[1])
+
+def save_weights():   
+   with open("jokes.csv", "w") as csvfile:
+      writer = csv.writer(csvfile)
+      writer.writerow(["Question", "Answer", "Weight"])
+      for row in zip(questions, answers, weights):
+         writer.writerow(row)
 
 def thread_save_weights(interval):
    while True:
-      with open("weights.csv", "w") as csvfile:
-         csvfile.write("\n".join([str(x) for x in weights]))
+      save_weights()
       time.sleep(interval)
 
 def start_weight_saving_thread(interval):
@@ -137,43 +144,58 @@ def dont_understand_cmd(bot, update):
     invalid_cmd = update.message.text.split()[0]
     update.message.reply_text("Sorry, " + invalid_cmd + " is an invalid command.\nEnter /joke to hear a joke.")
 
+def reset_weights():
+   load_jokes()
+   for i in range(len(weights)):
+      weights[i] = ""
+   save_weights()
+
 def main():
-    """Start the bot."""
-    logger.info("Bot started")
-    #Load jokes
-    load_jokes()
-    logger.info("Jokes loaded")
-    #Start saving weights every 15 minutes
-    start_weight_saving_thread(15 * 60)
-    logger.info("Start saving weights every 5 minutes")
+   parser = argparse.ArgumentParser(description='Starts a Telegram bots that tell question and answer jokes')
+   parser.add_argument('--reset', action='store_true', help='Resets the weights of all jokes')
+   args = parser.parse_args()
 
-    # Create the EventHandler and pass it your bot's token.
-    updater = Updater(get_api_key())
+   if args.reset:
+      #Resets weights of all jokes
+      reset_weights()
+      logger.info("Weights resetted")
 
-    # Get the dispatcher to register handlers
-    dp = updater.dispatcher
+   """Start the bot."""
+   logger.info("Bot started")
+   #Load jokes
+   load_jokes()
+   logger.info("Jokes loaded")
+   #Start saving weights every 15 minutes
+   start_weight_saving_thread(15 * 60)
+   logger.info("Start saving weights every 5 minutes")
 
-    # on different commands - answer in Telegram
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(AnsButton, pattern="q[0-9]+"))
-    dp.add_handler(CallbackQueryHandler(UpvoteButton, pattern="u[0-9]+"))
-    dp.add_handler(CallbackQueryHandler(DownvoteButton, pattern="d[0-9]+"))
-    dp.add_handler(CallbackQueryHandler(QnButton))
-    dp.add_handler(CommandHandler("help", help))
-    dp.add_handler(CommandHandler("joke", joke))
-    dp.add_handler(MessageHandler(Filters.text, dont_understand_msg))
-    dp.add_handler(MessageHandler(Filters.command, dont_understand_cmd))
+   # Create the EventHandler and pass it your bot's token.
+   updater = Updater(get_api_key())
 
-    # log all errors
-    dp.add_error_handler(error)
+   # Get the dispatcher to register handlers
+   dp = updater.dispatcher
 
-    # Start the Bot
-    updater.start_polling()
+   # on different commands - answer in Telegram
+   dp.add_handler(CommandHandler("start", start))
+   dp.add_handler(CallbackQueryHandler(AnsButton, pattern="q[0-9]+"))
+   dp.add_handler(CallbackQueryHandler(UpvoteButton, pattern="u[0-9]+"))
+   dp.add_handler(CallbackQueryHandler(DownvoteButton, pattern="d[0-9]+"))
+   dp.add_handler(CallbackQueryHandler(QnButton))
+   dp.add_handler(CommandHandler("help", help))
+   dp.add_handler(CommandHandler("joke", joke))
+   dp.add_handler(MessageHandler(Filters.text, dont_understand_msg))
+   dp.add_handler(MessageHandler(Filters.command, dont_understand_cmd))
 
-    # Run the bot until you press Ctrl-C or the process receives SIGINT,
-    # SIGTERM or SIGABRT. This should be used most of the time, since
-    # start_polling() is non-blocking and will stop the bot gracefully.
-    updater.idle()
+   # log all errors
+   dp.add_error_handler(error)
+
+   # Start the Bot
+   updater.start_polling()
+
+   # Run the bot until you press Ctrl-C or the process receives SIGINT,
+   # SIGTERM or SIGABRT. This should be used most of the time, since
+   # start_polling() is non-blocking and will stop the bot gracefully.
+   updater.idle()
 
 
 if __name__ == '__main__':
