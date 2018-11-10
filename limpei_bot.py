@@ -167,7 +167,7 @@ def main():
    logger.info("Jokes loaded")
    #Start saving weights every 15 minutes
    start_weight_saving_thread(15 * 60)
-   logger.info("Start saving weights every 5 minutes")
+   logger.info("Start saving weights every 15 minutes")
 
    # Create the EventHandler and pass it your bot's token.
    updater = Updater(get_api_key())
