@@ -13,7 +13,7 @@ reddit = praw.Reddit(client_id=<client-id>,
                      password=<password>)
                      
 subreddit = reddit.subreddit('Jokes')            
-top_subreddit = subreddit.hot(limit=500)         
+top_subreddit = subreddit.top(limit=1000)         
 jokes_dict = { "title":[],
                 "score":[],
                 "id":[], "url":[],
@@ -32,7 +32,7 @@ for submission in top_subreddit:
         
 with open("jokes2.csv", "wb") as f:
     writer = csv.writer(f)
-    writer.writerow(["Title"])
+    writer.writerow(["Joke"])
         
     for title, body in zip(jokes_dict["title"], jokes_dict["body"])[1:]:
         title = re.sub(r"\s+", " ", title)
