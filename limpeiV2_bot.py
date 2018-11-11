@@ -30,7 +30,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 def get_api_key():
-  with open("api_key.txt", "r") as file:
+  with open("api_key2.txt", "r") as file:
     api = file.read().strip()
   return api
 
