@@ -34,13 +34,18 @@ def get_api_key():
     api = file.read().strip()
   return api
 
-def load_jokes(default_weight=10.0):
+def load_jokes(**kwargs):
+   default_weight = 10.0
+   if "default_weight" in kwargs:
+      default_weight = kwargs["default_weight"]
+   file = "data2.csv"
+   if "file" in kwargs:
+      file = kwargs["file"]
    global jokes
    jokes = []
    global weights   
    weights = [] 
-   file_path = "jokes2.csv"
-   with open(file_path, 'r') as csvfile:
+   with open(file, 'r') as csvfile:
       #Skip header row
       for x in list(csv.reader(csvfile))[1:]:
          try:
@@ -51,7 +56,7 @@ def load_jokes(default_weight=10.0):
          jokes.append(x[0])
 
 def save_weights():   
-   with open("jokes2.csv", "w") as csvfile:
+   with open("data2.csv", "w") as csvfile:
       writer = csv.writer(csvfile)
       writer.writerow(["Joke", "Weight"])
       for row in zip(jokes, weights):
@@ -144,7 +149,13 @@ def reset_weights():
 def main():
    parser = argparse.ArgumentParser(description='Starts a Telegram bots that tell question and answer jokes')
    parser.add_argument('--reset', action='store_true', help='Resets the weights of all jokes')
+   parser.add_argument('--load', metavar='jokes_file.csv', action='store', help='Loads new jokes file')
    args = parser.parse_args()
+
+   if args.load:
+      load_jokes(file=args.load)
+      save_weights()
+      logger.info("Loaded " + args.load)
 
    if args.reset:
       #Resets weights of all jokes
