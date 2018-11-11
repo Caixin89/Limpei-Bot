@@ -35,7 +35,7 @@ def get_api_key():
   return api
 
 def load_jokes(**kwargs):
-   default_weight = 10.0
+   default_weight = 1.0
    if "default_weight" in kwargs:
       default_weight = kwargs["default_weight"]
    file = "data2.csv"
@@ -121,7 +121,7 @@ def DownvoteButton(bot, update):
    """Handle downvoting logic and clear the 'Hahaha, funny' and 'Meh' buttons"""
    query = update.callback_query
    selected_joke = int(query.data[1:])
-   weights[selected_joke] = max(weights[selected_joke] - 1, 1)
+   weights[selected_joke] = max(weights[selected_joke] - 1, 0)
    keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="j")]]
    text = jokes[selected_joke]
    reply_markup = InlineKeyboardMarkup(keyboard)
