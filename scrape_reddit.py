@@ -4,7 +4,7 @@ Spyder Editor
 
 This is a temporary script file.
 """
-import praw, csv, re
+import praw, unicodecsv, re
 
 reddit = praw.Reddit(client_id=<client-id>,
                      client_secret=<client-secret>,
@@ -31,15 +31,15 @@ for submission in top_subreddit:
     jokes_dict["body"].append(submission.selftext)                
         
 with open("jokes2.csv", "wb") as f:
-    writer = csv.writer(f)
+    writer = unicodecsv.writer(f, encoding="utf-8")
     writer.writerow(["Joke"])
         
-    for title, body in zip(jokes_dict["title"], jokes_dict["body"])[1:]:
+    for title, body in zip(jokes_dict["title"][1:], jokes_dict["body"][1:]):
         title = re.sub(r"\s+", " ", title)
         #If title does not end in puctuation, add full stop.
         if not re.match(r"[!.,?]$", title):
             title += "."
         body = re.sub(r"\s+", " ", body)        
-        writer.writerow([title.encode("utf-8") + " " + body.encode("utf-8")])
+        writer.writerow([title + " " + body])
     
     
