@@ -6,8 +6,7 @@ and jokes dataset from https://www.kaggle.com/jiriroz/qa-jokes.
 
 ## Instructions
 Enter `python limpei_bot.py --load jokes.csv` for first startup to load jokes from jokes.csv.   
-For subsequent startups, just run `python limpei_bot.py` on the server.   
-To reset the learnt weights of all jokes before starting up, enter `python limpei_bot.py --reset`.   
+For subsequent startups, just run `python limpei_bot.py` on the server.     
 To terminate the process, enter Ctrl+C.
 
 ## Interacting with the bot
