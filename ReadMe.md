@@ -13,4 +13,4 @@ To terminate the process, enter Ctrl+C.
 ## Interacting with the bot
 1. Enter /joke to start
 2. The question part of the joke will be displayed with a button for user to press to see the answer part.
-3. After clicking the answer part of the joke, the answer will appear and a button to display the next joke will also appear. There are also buttons to upvote("Haha, funny") or downvote("Meh") a joke.
+3. After clicking the answer part of the joke, the answer will appear and a button to display the next joke will also appear.
