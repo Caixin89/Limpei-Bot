@@ -35,42 +35,15 @@ def get_api_key():
   return api
 
 def load_jokes(**kwargs):
-   default_weight = 1.0
-   if "default_weight" in kwargs:
-      default_weight = kwargs["default_weight"]
-   file = "data2.csv"
+   file = "jokes2.csv"
    if "file" in kwargs:
       file = kwargs["file"]
    global jokes
    jokes = []
-   global weights   
-   weights = [] 
    with open(file, 'r') as csvfile:
       #Skip header row
-      for x in list(csv.reader(csvfile))[1:]:
-         try:
-            weight = float(x[1])
-         except (ValueError, IndexError) as e:
-            weight = default_weight
-         weights.append(weight)        
-         jokes.append(x[0])
-
-def save_weights():   
-   with open("data2.csv", "w") as csvfile:
-      writer = csv.writer(csvfile)
-      writer.writerow(["Joke", "Weight"])
-      for row in zip(jokes, weights):
-         writer.writerow(row)
-
-def thread_save_weights(interval):
-   while True:
-      save_weights()
-      time.sleep(interval)
-      
-def start_weight_saving_thread(interval):
-   thread = threading.Thread(target=thread_save_weights, args=(interval,))
-   thread.daemon = True # Daemonize thread
-   thread.start()  # Start the execution              
+      for x in list(csv.reader(csvfile))[1:]:        
+         jokes.append(x[0])        
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -87,10 +60,8 @@ def help(bot, update):
 
 def joke(bot, update):
    """Provide a new joke and display 'Hahaha, funny', 'Meh' and 'Next joke pls!' buttons"""
-   selected_joke = np.random.choice(len(jokes), p=weights / np.sum(weights))
-   keyboard = [[InlineKeyboardButton("Hahaha, funny", callback_data="u"+str(selected_joke)), 
-   InlineKeyboardButton("Meh", callback_data="d"+str(selected_joke))],
-   [InlineKeyboardButton("Next joke pls!", callback_data="j")]]
+   selected_joke = np.random.choice(len(jokes))
+   keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="j")]]
    text = jokes[selected_joke]
    reply_markup = InlineKeyboardMarkup(keyboard)
    update.message.reply_text(text, reply_markup=reply_markup)    
@@ -98,34 +69,12 @@ def joke(bot, update):
 def JokeButton(bot, update):
    """Provide a new joke and display 'Hahaha, funny', 'Meh' and 'Next joke pls!' buttons"""
    query = update.callback_query
-   selected_joke = np.random.choice(len(jokes), p=weights / np.sum(weights))
-   keyboard = [[InlineKeyboardButton("Hahaha, funny", callback_data="u"+str(selected_joke)), 
-   InlineKeyboardButton("Meh", callback_data="d"+str(selected_joke))],
-   [InlineKeyboardButton("Next joke pls!", callback_data="j")]]
+   selected_joke = np.random.choice(len(jokes))
+   keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="j")]]
    text = jokes[selected_joke]
    reply_markup = InlineKeyboardMarkup(keyboard)
    bot.edit_message_reply_markup(chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=None)
    update.effective_chat.send_message(text, reply_markup=reply_markup)
-
-def UpvoteButton(bot, update):
-   """Handle upvoting logic and clear the 'Hahaha, funny' and 'Meh' buttons"""
-   query = update.callback_query
-   selected_joke = int(query.data[1:])
-   weights[selected_joke] = weights[selected_joke] + 1
-   keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="j")]]
-   text = jokes[selected_joke]
-   reply_markup = InlineKeyboardMarkup(keyboard)
-   bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
-
-def DownvoteButton(bot, update):
-   """Handle downvoting logic and clear the 'Hahaha, funny' and 'Meh' buttons"""
-   query = update.callback_query
-   selected_joke = int(query.data[1:])
-   weights[selected_joke] = max(weights[selected_joke] - 1, 0)
-   keyboard = [[InlineKeyboardButton("Next joke pls!", callback_data="j")]]
-   text = jokes[selected_joke]
-   reply_markup = InlineKeyboardMarkup(keyboard)
-   bot.edit_message_text(text, chat_id=query.message.chat_id, message_id=query.message.message_id, reply_markup=reply_markup)
 
 def dont_understand_msg(bot, update):
     """Handle invalid user message"""
@@ -140,36 +89,20 @@ def dont_understand_cmd(bot, update):
     invalid_cmd = update.message.text.split()[0]
     update.message.reply_text("Sorry, " + invalid_cmd + " is an invalid command.\nEnter /joke to hear a joke.")
 
-def reset_weights():
-   load_jokes()
-   for i in range(len(weights)):
-      weights[i] = ""
-   save_weights()    
-
 def main():
    parser = argparse.ArgumentParser(description='Starts a Telegram bots that tell question and answer jokes')
-   parser.add_argument('--reset', action='store_true', help='Resets the weights of all jokes')
    parser.add_argument('--load', metavar='jokes_file.csv', action='store', help='Loads new jokes file')
    args = parser.parse_args()
 
    if args.load:
       load_jokes(file=args.load)
-      save_weights()
       logger.info("Loaded " + args.load)
-
-   if args.reset:
-      #Resets weights of all jokes
-      reset_weights()
-      logger.info("Weights resetted")
 
    """Start the bot."""
    logger.info("Bot started")
    #Load jokes
    load_jokes()
    logger.info("Jokes loaded")
-   #Start saving weights every 15 minutes
-   start_weight_saving_thread(15 * 60)
-   logger.info("Start saving weights every 15 minutes")
 
    # Create the EventHandler and pass it your bot's token.
    updater = Updater(get_api_key())
@@ -179,8 +112,6 @@ def main():
 
    # on different commands - answer in Telegram
    dp.add_handler(CommandHandler("start", start))    
-   dp.add_handler(CallbackQueryHandler(UpvoteButton, pattern="u[0-9]+"))
-   dp.add_handler(CallbackQueryHandler(DownvoteButton, pattern="d[0-9]+"))
    dp.add_handler(CallbackQueryHandler(JokeButton))
    dp.add_handler(CommandHandler("help", help))
    dp.add_handler(CommandHandler("joke", joke))
