@@ -88,10 +88,10 @@ def dont_understand_cmd(bot, update):
 
 def main():
    parser = argparse.ArgumentParser(description='Starts a Telegram bots that tell question and answer jokes')
-   parser.add_argument('--load', metavar='jokes_file.csv', action='store', help='Loads new jokes file')
+   parser.add_argument('--load', metavar='jokes_file.txt', action='store', help='Loads new jokes file')
    args = parser.parse_args()
 
-   load_file = args.load if args.load else "jokes2.csv"
+   load_file = args.load if args.load else "jokes2.txt"
    load_jokes(load_file)
    logger.info("Loaded jokes from " + load_file)
 
