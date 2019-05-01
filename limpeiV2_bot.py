@@ -19,7 +19,7 @@ bot.
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
-import logging, os, csv, threading, time
+import logging, os, threading, time
 import numpy as np
 import argparse
 
@@ -34,16 +34,13 @@ def get_api_key():
     api = file.read().strip()
   return api
 
-def load_jokes(**kwargs):
-   file = "jokes2.csv"
-   if "file" in kwargs:
-      file = kwargs["file"]
+def load_jokes(load_file):
    global jokes
    jokes = []
-   with open(file, 'r') as csvfile:
+   with open(load_file, 'r') as f:
       #Skip header row
-      for x in list(csv.reader(csvfile))[1:]:        
-         jokes.append(x[0])        
+      for line in f.readlines():        
+         jokes.append(line)        
 
 # Define a few command handlers. These usually take the two arguments bot and
 # update. Error handlers also receive the raised TelegramError object in error.
@@ -94,15 +91,12 @@ def main():
    parser.add_argument('--load', metavar='jokes_file.csv', action='store', help='Loads new jokes file')
    args = parser.parse_args()
 
-   if args.load:
-      load_jokes(file=args.load)
-      logger.info("Loaded " + args.load)
+   load_file = args.load if args.load else "jokes2.csv"
+   load_jokes(load_file)
+   logger.info("Loaded jokes from " + load_file)
 
    """Start the bot."""
    logger.info("Bot started")
-   #Load jokes
-   load_jokes()
-   logger.info("Jokes loaded")
 
    # Create the EventHandler and pass it your bot's token.
    updater = Updater(get_api_key())

@@ -34,15 +34,12 @@ def get_api_key():
     api = file.read().strip()
   return api
 
-def load_jokes(**kwargs):
-   file = "jokes.csv"
-   if "file" in kwargs:
-      file = kwargs["file"]
+def load_jokes(load_file):
    global questions
    questions = []
    global answers 
    answers = []  
-   with open(file, 'r') as csvfile:
+   with open(load_file, 'r') as csvfile:
       #Skip header row
       for x in list(csv.reader(csvfile))[1:]:    
          questions.append(x[0])
@@ -105,15 +102,12 @@ def main():
    parser.add_argument('--load', metavar='jokes.csv', action='store', help='Loads new jokes file')
    args = parser.parse_args()
 
-   if args.load:
-      load_jokes(file=args.load)
-      logger.info("Loaded " + args.load)
+   load_file = args.load if args.load else "jokes.csv"
+   load_jokes(load_file)
+   logger.info("Loaded jokes from " + load_file)
 
    """Start the bot."""
    logger.info("Bot started")
-   #Load jokes
-   load_jokes()
-   logger.info("Jokes loaded")
 
    # Create the EventHandler and pass it your bot's token.
    updater = Updater(get_api_key())
